@@ -11,6 +11,7 @@ interface AlertData {
   dateTime: string;
   zoneType?: string;
   location?: string;
+  confidence?: string;
 }
 
 interface StatusBadgeProps {
@@ -49,6 +50,7 @@ interface AlertCardBodyProps {
   dateTime: string;
   zoneType: string;
   location: string;
+  confidence?: string;
 }
 
 export const AlertCardBody: React.FC<AlertCardBodyProps> = ({
@@ -57,7 +59,8 @@ export const AlertCardBody: React.FC<AlertCardBodyProps> = ({
   cameraId,
   dateTime,
   zoneType,
-  location
+  location,
+  confidence
 }) => {
   return (
     <div className="alert-card__body">
@@ -85,6 +88,12 @@ export const AlertCardBody: React.FC<AlertCardBodyProps> = ({
         <span className="alert-card__label">Location:</span>
         <span className="alert-card__value">{location}</span>
       </div>
+      {confidence && (
+        <div className="alert-card__row">
+          <span className="alert-card__label">Confidence:</span>
+          <span className="alert-card__value">{confidence}</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -92,20 +101,27 @@ export const AlertCardBody: React.FC<AlertCardBodyProps> = ({
 interface AlertCardActionsProps {
   onViewRecording: () => void;
   onAcknowledge: () => void;
+  onExportClip?: () => void;
 }
 
 export const AlertCardActions: React.FC<AlertCardActionsProps> = ({
   onViewRecording,
-  onAcknowledge
+  onAcknowledge,
+  onExportClip
 }) => {
   return (
-    <div className="alert-card__actions">
+    <div className={`alert-card__actions ${onExportClip ? 'alert-card__actions--triple' : ''}`}>
       <button className="alert-card__btn alert-card__btn--secondary" onClick={onViewRecording}>
-        View Recording
+        {onExportClip ? 'Play recording' : 'View Recording'}
       </button>
       <button className="alert-card__btn alert-card__btn--primary" onClick={onAcknowledge}>
         Acknowledge
       </button>
+      {onExportClip && (
+        <button className="alert-card__btn alert-card__btn--secondary" onClick={onExportClip}>
+          Export clip
+        </button>
+      )}
     </div>
   );
 };
@@ -113,15 +129,40 @@ export const AlertCardActions: React.FC<AlertCardActionsProps> = ({
 interface AlertCardProps {
   alert: AlertData;
   isHighlighted?: boolean;
+  onViewRecording?: () => void;
+  onAcknowledge?: () => void;
+  onExportClip?: () => void;
 }
 
-export const AlertCard: React.FC<AlertCardProps> = ({ alert, isHighlighted }) => {
+export const AlertCard: React.FC<AlertCardProps> = ({ 
+  alert, 
+  isHighlighted,
+  onViewRecording,
+  onAcknowledge,
+  onExportClip
+}) => {
   const handleViewRecording = () => {
-    console.log(`View recording for alert ${alert.id}`);
+    if (onViewRecording) {
+      onViewRecording();
+    } else {
+      console.log(`View recording for alert ${alert.id}`);
+    }
   };
 
   const handleAcknowledge = () => {
-    console.log(`Acknowledge alert ${alert.id}`);
+    if (onAcknowledge) {
+      onAcknowledge();
+    } else {
+      console.log(`Acknowledge alert ${alert.id}`);
+    }
+  };
+
+  const handleExportClip = () => {
+    if (onExportClip) {
+      onExportClip();
+    } else {
+      console.log(`Export clip for alert ${alert.id}`);
+    }
   };
 
   return (
@@ -130,14 +171,16 @@ export const AlertCard: React.FC<AlertCardProps> = ({ alert, isHighlighted }) =>
       <AlertCardBody
         rig={alert.rig}
         eventId={alert.eventId}
-        cameraId={alert.camera.split(' ')[1] || '01'} // Fallback if camera name is different
+        cameraId={alert.camera.split(' ')[1] || '04'} // Defaulting to 04 as per requirement for incident
         dateTime={alert.dateTime}
         zoneType={alert.zoneType || (alert.status === 'critical' ? 'Red Zone' : 'Yellow Zone')}
         location={alert.location || 'Drill floor 9'}
+        confidence={alert.confidence}
       />
       <AlertCardActions
         onViewRecording={handleViewRecording}
         onAcknowledge={handleAcknowledge}
+        onExportClip={onExportClip ? handleExportClip : undefined}
       />
     </div>
   );

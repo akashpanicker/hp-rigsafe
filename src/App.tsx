@@ -6,11 +6,13 @@ import VideoPanel from './components/VideoPanel';
 import AlertToast from './components/AlertToast';
 import AlertTable from './components/AlertTable';
 import AlertCardPanel from './components/AlertCardPanel';
+import IncidentDetailsPage from './components/IncidentDetailsPage';
 import { alertData } from './constants/alerts';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeLayout, setActiveLayout] = useState('Layout 2'); // Defaulting to Layout 2 as per initial state
+  const [activeLayout, setActiveLayout] = useState('Layout 2');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'incident-details'>('dashboard');
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -18,14 +20,37 @@ function App() {
 
   const handleLayoutChange = (layout: string) => {
     setActiveLayout(layout);
+    setCurrentView('dashboard');
   };
+
+  const handleViewDetails = () => {
+    setCurrentView('incident-details');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+  };
+
+  if (currentView === 'incident-details') {
+    return (
+      <IncidentDetailsPage 
+        isSidebarOpen={isSidebarOpen} 
+        onToggleSidebar={toggleSidebar}
+        onBack={handleBackToDashboard}
+      />
+    );
+  }
 
   const activeAlert = alertData.find(a => a.activity === 'Active') || null;
   const recentAlerts = alertData.filter(a => a.activity === 'Recent');
 
   return (
     <div className="app">
-      <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+      <Header 
+        isSidebarOpen={isSidebarOpen} 
+        onToggleSidebar={toggleSidebar} 
+        onLogoClick={handleBackToDashboard}
+      />
 
       <div className="app-container">
         <Sidebar 
@@ -77,7 +102,7 @@ function App() {
         </main>
       </div>
 
-      <AlertToast />
+      <AlertToast onViewDetails={handleViewDetails} />
     </div>
   );
 }

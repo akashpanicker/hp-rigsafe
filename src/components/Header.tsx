@@ -1,9 +1,11 @@
 interface HeaderProps {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  pageTitle?: string;
+  onLogoClick?: () => void;
 }
 
-function Header({ isSidebarOpen, onToggleSidebar }: HeaderProps) {
+function Header({ isSidebarOpen, onToggleSidebar, pageTitle = "Dashboard", onLogoClick }: HeaderProps) {
   return (
     <header className="header" role="banner">
       <div className="header__left">
@@ -27,11 +29,23 @@ function Header({ isSidebarOpen, onToggleSidebar }: HeaderProps) {
           )}
         </button>
 
-        <div className="header__logo">
+        <div 
+          className="header__logo" 
+          onClick={onLogoClick} 
+          style={{ cursor: onLogoClick ? 'pointer' : 'default' }}
+          role={onLogoClick ? 'button' : undefined}
+          tabIndex={onLogoClick ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (onLogoClick && (e.key === 'Enter' || e.key === ' ')) {
+              onLogoClick();
+            }
+          }}
+          aria-label={onLogoClick ? "Back to Dashboard" : undefined}
+        >
           <img src="/assets/images/HP-Logo.png" alt="H&P Logo" className="header__logo-img" />
           <div className="header__logo-text">
             <span className="header__logo-title">H&amp;P RigSafe</span>
-            <span className="header__logo-subtitle">Dashboard</span>
+            <span className="header__logo-subtitle">{pageTitle}</span>
           </div>
         </div>
       </div>

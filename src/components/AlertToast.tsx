@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
-function AlertToast() {
+interface AlertToastProps {
+  onViewDetails?: () => void;
+}
+
+function AlertToast({ onViewDetails }: AlertToastProps) {
   const [visible, setVisible] = useState<boolean>(true);
   const [closing, setClosing] = useState<boolean>(false);
 
@@ -46,7 +50,11 @@ function AlertToast() {
         </button>
       </div>
       <div className="alert-toast__footer">
-        <button className="alert-toast__view-btn" type="button">
+        <button 
+          className="alert-toast__view-btn" 
+          type="button"
+          onClick={onViewDetails}
+        >
           View Details
         </button>
       </div>

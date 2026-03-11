@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import CameraHierarchyDropdown from './CameraHierarchyDropdown';
 
 interface BoundingBox {
@@ -15,6 +15,7 @@ interface VideoPanelProps {
   feedVideo?: string;
   isAlert?: boolean;
   boundingBox?: BoundingBox;
+  startTime?: number;
 }
 
 function VideoPanel({
@@ -24,11 +25,18 @@ function VideoPanel({
   feedVideo,
   isAlert = false,
   boundingBox,
+  startTime,
 }: VideoPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [cameraName, setCameraName] = useState(initialCameraName);
   const [breadcrumb, setBreadcrumb] = useState(initialBreadcrumb);
+
+  useEffect(() => {
+    if (videoRef.current && startTime !== undefined) {
+      videoRef.current.currentTime = startTime;
+    }
+  }, [startTime]);
 
   const handleCameraSelect = (name: string, path: string) => {
     setCameraName(name);
