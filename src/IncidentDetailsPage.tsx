@@ -111,7 +111,7 @@ const IncidentDetailsPage: React.FC<IncidentDetailsPageProps> = ({
           </div>
           <div className="context-bar__center">
             <div className="context-bar__breadcrumb">
-              West &gt; Midland Site &gt; Rig 145 &gt; Cam 02 – Pipe Deck
+              West / Midland Site / Rig 145 / Cam 02 - Pipe Deck
             </div>
           </div>
           <div className="context-bar__right">
@@ -133,7 +133,7 @@ const IncidentDetailsPage: React.FC<IncidentDetailsPageProps> = ({
           <div className="incident-video-container">
             <VideoPanel
               cameraName="Cam 02 - Pipe Deck"
-              breadcrumb="West > Midland Site > Rig 145 > Cam 02 - Pipe Deck"
+              breadcrumb="West / Midland Site / Rig 145 / Cam 02 - Pipe Deck"
               feedImage="/assets/images/camera-04.png"
               feedVideo="/assets/images/Rig video 1.mp4"
               isAlert={true}

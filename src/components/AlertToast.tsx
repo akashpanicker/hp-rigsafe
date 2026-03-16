@@ -13,11 +13,11 @@ interface DemoToast {
 const DEMO_TOAST_INTERVAL_MS = 60_000;
 const MAX_DEMO_TOASTS = 4;
 const DEMO_ALERT_LOCATIONS = [
-  'West > Site 09 > Rig 146 > Cam 03 – Pipe Deck',
-  'East > Site 28 > Rig 160 > Cam 01 – Pipe Deck',
-  'North > Site 14 > Rig 132 > Cam 05 – Drill Floor',
-  'South > Site 31 > Rig 171 > Cam 02 – Catwalk',
-  'Central > Site 07 > Rig 120 > Cam 04 – BOP Area',
+  'West / Site 09 / Rig 146 / Cam 03 – Pipe Deck',
+  'East / Site 28 / Rig 160 / Cam 01 – Pipe Deck',
+  'North / Site 14 / Rig 132 / Cam 05 – Drill Floor',
+  'South / Site 31 / Rig 171 / Cam 02 – Catwalk',
+  'Central / Site 07 / Rig 120 / Cam 04 – BOP Area',
 ];
 
 function AlertToast({ onViewDetails }: AlertToastProps) {

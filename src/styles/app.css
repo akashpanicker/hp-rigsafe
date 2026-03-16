@@ -938,7 +938,7 @@ body,
    ALERT TABLE COMPONENT
    ============================================ */
 .alerts-section {
-  padding: var(--spacing-lg);
+  padding: 4px var(--spacing-lg) var(--spacing-lg);
   display: flex;
   flex-direction: column;
   flex: 1;

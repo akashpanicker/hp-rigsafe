@@ -30,7 +30,7 @@ const DEFAULT_LAYOUT_2_VIDEO_PANELS: DashboardVideoPanel[] = [
   {
     id: 'cam-04',
     cameraName: 'Cam 04 - Pipe Deck',
-    breadcrumb: 'West > Midland Site > Rig 145 > Cam 04 - Pipe Deck',
+    breadcrumb: 'West / Midland Site / Rig 145 / Cam 04 - Pipe Deck',
     feedImage: '/assets/images/camera-02.png',
     feedVideo: '/assets/images/Rig video 1.mp4',
     isAlert: true,
@@ -38,7 +38,7 @@ const DEFAULT_LAYOUT_2_VIDEO_PANELS: DashboardVideoPanel[] = [
   {
     id: 'cam-03',
     cameraName: 'Cam 03 – Pipe Deck',
-    breadcrumb: 'West > Site 09 > Rig 146 > Cam 03 – Pipe Deck',
+    breadcrumb: 'West / Site 09 / Rig 146 / Cam 03 – Pipe Deck',
     feedImage: '/assets/images/camera-05.png',
   },
 ];
@@ -131,7 +131,7 @@ function App() {
                 <section className="video-section video-section--single" aria-label="Video monitoring panel">
                   <VideoPanel
                     cameraName="Cam 04 - Pipe Deck"
-                    breadcrumb="West > Midland Site > Rig 145 > Cam 04 - Pipe Deck"
+                    breadcrumb="West / Midland Site / Rig 145 / Cam 04 - Pipe Deck"
                     feedImage="/assets/images/camera-04.png"
                     feedVideo="/assets/images/Rig video 1.mp4"
                     isAlert={true}
