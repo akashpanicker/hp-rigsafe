@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AlertRow from './AlertRow';
 
 import { alertData } from '../constants/alerts';
+import { useRigFilter } from '../store/rigFilterStore';
 
 interface AlertTableProps {
   onViewRecording?: () => void;
@@ -9,9 +10,10 @@ interface AlertTableProps {
 
 function AlertTable({ onViewRecording }: AlertTableProps) {
   const [activeView, setActiveView] = useState<'table' | 'card'>('table');
-  const criticalAlerts = alertData.filter((alert) => alert.status === 'critical');
-  const warningAlerts = alertData.filter((alert) => alert.status === 'warning');
-  const orderedAlerts = [...criticalAlerts, ...warningAlerts];
+  const { isInScope } = useRigFilter();
+  const criticalAlerts = alertData.filter((alert) => alert.status === 'critical' && isInScope(alert.rig));
+  const warningAlerts  = alertData.filter((alert) => alert.status === 'warning'  && isInScope(alert.rig));
+  const orderedAlerts  = [...criticalAlerts, ...warningAlerts];
 
   return (
     <section className="alerts-section" aria-label="Alert notifications">

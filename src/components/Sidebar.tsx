@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import MyRigsSection from './MyRigsSection';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,9 +32,31 @@ function Sidebar({ isOpen, activeLayout, onLayoutChange, hideLayouts = false }: 
   const [isSouthSite1Expanded, setIsSouthSite1Expanded] = useState(false);
   const [isSouthRig450Expanded, setIsSouthRig450Expanded] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setIsCameraExpanded(false);
+      setIsLayoutsExpanded(false);
+      setIsEastExpanded(false);
+      setIsSite1Expanded(false);
+      setIsRig145Expanded(false);
+      setIsWestExpanded(false);
+      setIsWestSite1Expanded(false);
+      setIsWestRig250Expanded(false);
+      setIsNorthExpanded(false);
+      setIsNorthSite1Expanded(false);
+      setIsNorthRig350Expanded(false);
+      setIsSouthExpanded(false);
+      setIsSouthSite1Expanded(false);
+      setIsSouthRig450Expanded(false);
+    }
+  }, [isOpen]);
+
   return (
     <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__content">
+        {/* My Rigs Section */}
+        <MyRigsSection />
+
         {/* Select Camera Section */}
         <div className="sidebar__section">
           <button 

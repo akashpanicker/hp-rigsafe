@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import CameraThumbnail from './CameraThumbnail';
 import { Tooltip, TooltipContent, TooltipTrigger } from './Tooltip';
+import { useRigFilter } from '../store/rigFilterStore';
 
 interface Camera {
   id: number;
@@ -159,7 +160,12 @@ const THUMBNAIL_HIERARCHY_DATA: RegionNode[] = [
   },
 ];
 
-function CameraThumbnailBar() {
+interface CameraThumbnailBarProps {
+  onChipClick?: () => void;
+}
+
+function CameraThumbnailBar({ onChipClick }: CameraThumbnailBarProps) {
+  const { isInScope, selectedCount, buildScopeText } = useRigFilter();
   const [activeCamera, setActiveCamera] = useState<number>(1);
   const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
   const [selectedRegionId, setSelectedRegionId] = useState<string>('east');
@@ -283,7 +289,29 @@ function CameraThumbnailBar() {
             </div>
           )}
         </div>
+
+        {selectedCount > 0 && (() => {
+          const full = buildScopeText();
+          const chipText = full.startsWith('My Rigs: ') ? full.slice('My Rigs: '.length) : full;
+          return (
+            <div className="scope-chip" role="button" tabIndex={0} aria-label={`Active rig filter: ${chipText}`} onClick={onChipClick} onKeyDown={e => e.key === 'Enter' && onChipClick?.()}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              <span>{chipText}</span>
+            </div>
+          );
+        })()}
       </div>
+
+      {selectedCount > 0 && !isInScope(selectedRigId) && (
+        <div className="thumbnail-bar__filter-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span>Selected rig is outside the My Rigs filter</span>
+        </div>
+      )}
 
       <div className="thumbnail-bar" role="listbox" aria-label="Camera feed thumbnails">
         {cameras.map((camera) => (

@@ -8,6 +8,7 @@ import AlertTable from './components/AlertTable';
 import AlertCardPanel from './components/AlertCardPanel';
 import IncidentDetailsPage from './IncidentDetailsPage';
 import { alertData } from './constants/alerts';
+import { useRigFilter } from './store/rigFilterStore';
 
 type AppView = 'dashboard' | 'incident-details';
 
@@ -67,8 +68,15 @@ function App() {
     setCurrentView(view);
   };
 
+  const { setMyRigsExpanded } = useRigFilter();
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleChipClick = () => {
+    setIsSidebarOpen(true);
+    setMyRigsExpanded(true);
   };
 
   const handleLayoutChange = (layout: string) => {
@@ -128,7 +136,7 @@ function App() {
           {activeLayout === 'Layout 1' ? (
             <div className="layout-1-grid">
               <div className="layout-1-main">
-                <CameraThumbnailBar />
+                <CameraThumbnailBar onChipClick={handleChipClick} />
 
                 <section className="video-section video-section--single" aria-label="Video monitoring panel">
                   <VideoPanel
@@ -146,7 +154,7 @@ function App() {
             </div>
           ) : (
             <div className="main-content__inner">
-              <CameraThumbnailBar />
+              <CameraThumbnailBar onChipClick={handleChipClick} />
 
               <section
                 className={`video-section video-section--dashboard${layout2VideoPanels.length === 1 ? ' video-section--one-panel' : ''}`}

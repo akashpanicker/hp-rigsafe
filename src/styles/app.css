@@ -438,7 +438,7 @@ body,
 .thumbnail-section__top {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: 8px;
   margin: 8px 0;
 }
 
@@ -2212,4 +2212,235 @@ body,
   .incident-side {
     height: auto;
   }
+}
+
+/* ============================================
+   SCOPE INDICATOR BAR
+   ============================================ */
+.scope-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background-color: var(--surface-3);
+  border: 1px solid var(--surface-5);
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.scope-chip:hover {
+  background-color: var(--surface-4);
+  border-color: var(--primary-1);
+}
+
+.scope-chip svg {
+  width: 12px;
+  height: 12px;
+  color: var(--primary-1);
+  flex-shrink: 0;
+}
+
+.scope-chip span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary-1);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* app-container fills remaining height */
+.app-container {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ============================================
+   MY RIGS SECTION — checkbox tree
+   ============================================ */
+
+/* Rows at each level */
+.myRigs__row {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+}
+
+.myRigs__row:hover {
+  background-color: var(--surface-4);
+}
+
+.myRigs__row--region {
+  padding: 4px 8px 4px 12px;
+}
+
+.myRigs__row--site {
+  padding: 4px 8px 4px 24px;
+}
+
+.myRigs__row--rig {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 4px 8px 4px 50px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-2);
+  cursor: default;
+  transition: background-color var(--transition-fast);
+}
+
+.myRigs__row--rig:hover {
+  background-color: var(--surface-4);
+}
+
+/* Expandable label part (chevron + icon/text) */
+.myRigs__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  padding: 2px 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.myRigs__label:hover {
+  color: var(--text-1);
+}
+
+.myRigs__rig-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-2);
+}
+
+/* Counter badge on section header */
+.myRigs__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background-color: var(--primary);
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Footer counter row */
+.myRigs__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  border-top: 1px solid var(--surface-4);
+}
+
+.myRigs__count {
+  font-size: var(--font-size-xs);
+  color: var(--text-3);
+}
+
+.myRigs__count--empty {
+  font-style: italic;
+}
+
+.myRigs__reset {
+  font-size: var(--font-size-xs);
+  color: var(--primary-1);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.myRigs__reset:hover {
+  background-color: var(--surface-4);
+  color: var(--text-1);
+}
+
+/* ── Custom checkbox ─────────────────────────────────────────────────── */
+.myRigs__checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  border: 1.5px solid var(--text-4);
+  border-radius: 3px;
+  background-color: var(--surface-3);
+  cursor: pointer;
+  position: relative;
+  margin-right: 4px;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.myRigs__checkbox:hover {
+  border-color: var(--primary-1);
+}
+
+.myRigs__checkbox:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.myRigs__checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  width: 5px;
+  height: 8px;
+  border: 1.5px solid var(--white);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.myRigs__checkbox:indeterminate {
+  background-color: var(--primary-3);
+  border-color: var(--primary-3);
+}
+
+.myRigs__checkbox:indeterminate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  right: 2px;
+  height: 1.5px;
+  background-color: var(--white);
+  transform: translateY(-50%);
+}
+
+/* ── Camera thumbnail bar filter notice ─────────────────────────────── */
+.thumbnail-bar__filter-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 5px var(--spacing-md);
+  margin: 0 var(--spacing-xs) var(--spacing-xs);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-3);
+  border: 1px solid var(--surface-5);
+  font-size: var(--font-size-xs);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.thumbnail-bar__filter-notice svg {
+  width: 12px;
+  height: 12px;
+  color: var(--primary-1);
+  flex-shrink: 0;
 }

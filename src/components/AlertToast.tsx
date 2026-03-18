@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useRigFilter } from '../store/rigFilterStore';
 
 interface AlertToastProps {
   onViewDetails?: () => void;
@@ -20,7 +21,14 @@ const DEMO_ALERT_LOCATIONS = [
   'Central / Site 07 / Rig 120 / Cam 04 – BOP Area',
 ];
 
+// Extract "Rig NNN" from a location string like "West / Site 09 / Rig 146 / Cam 03 – Pipe Deck"
+function extractRigName(message: string): string {
+  const match = message.match(/Rig\s+\d+/i);
+  return match ? match[0] : '';
+}
+
 function AlertToast({ onViewDetails }: AlertToastProps) {
+  const { isInScope } = useRigFilter();
   const nextLocationIndexRef = useRef(0);
 
   const createToast = (): DemoToast => {
@@ -60,11 +68,17 @@ function AlertToast({ onViewDetails }: AlertToastProps) {
     }, 300);
   };
 
-  if (toasts.length === 0) return null;
+  // Only show toasts whose rig is currently in scope
+  const visibleToasts = toasts.filter(toast => {
+    const rig = extractRigName(toast.message);
+    return rig ? isInScope(rig) : true;
+  });
+
+  if (visibleToasts.length === 0) return null;
 
   return (
     <div className="alert-toast-stack" aria-live="assertive" aria-atomic="false">
-      {toasts.map((toast) => (
+      {visibleToasts.map((toast) => (
         <div
           key={toast.id}
           className={`alert-toast${toast.closing ? ' alert-toast--closing' : ''}`}
