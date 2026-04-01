@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import CameraThumbnail from './CameraThumbnail';
 import { Tooltip, TooltipContent, TooltipTrigger } from './Tooltip';
 import { useRigFilter } from '../store/rigFilterStore';
@@ -171,7 +171,11 @@ function CameraThumbnailBar({ onChipClick }: CameraThumbnailBarProps) {
   const [selectedRegionId, setSelectedRegionId] = useState<string>('east');
   const [selectedSiteId, setSelectedSiteId] = useState<string>('site-1');
   const [selectedRigId, setSelectedRigId] = useState<string>('rig-145');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [focusedRigId, setFocusedRigId] = useState<string | null>(null);
+
   const hierarchyRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -179,35 +183,153 @@ function CameraThumbnailBar({ onChipClick }: CameraThumbnailBarProps) {
         setIsHierarchyOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const currentRegion = THUMBNAIL_HIERARCHY_DATA.find((region) => region.id === selectedRegionId);
-  const currentSite = currentRegion?.sites.find((site) => site.id === selectedSiteId);
-  const currentRig = currentSite?.rigs.find((rig) => rig.id === selectedRigId);
+  useEffect(() => {
+    if (isHierarchyOpen) {
+      if (searchInputRef.current) searchInputRef.current.focus();
+      
+      // Auto-focus the currently selected rig when opening
+      if (!focusedRigId) {
+        setFocusedRigId(selectedRigId);
+        const r = THUMBNAIL_HIERARCHY_DATA.find(r => r.sites.some(s => s.rigs.some(rig => rig.id === selectedRigId)));
+        if (r) {
+          setSelectedRegionId(r.id);
+          const s = r.sites.find(s => s.rigs.some(rig => rig.id === selectedRigId));
+          if (s) setSelectedSiteId(s.id);
+        }
+      }
+    } else {
+      setSearchQuery('');
+      setFocusedRigId(null);
+    }
+  }, [isHierarchyOpen]);
 
-  const handleRegionHover = (regionId: string) => {
-    const nextRegion = THUMBNAIL_HIERARCHY_DATA.find((region) => region.id === regionId);
-    const firstSite = nextRegion?.sites[0];
-    const firstRig = firstSite?.rigs[0];
+  const filteredTree = useMemo(() => {
+    if (!searchQuery) return THUMBNAIL_HIERARCHY_DATA;
+    const q = searchQuery.toLowerCase();
 
-    setSelectedRegionId(regionId);
-    setSelectedSiteId(firstSite?.id ?? '');
-    setSelectedRigId(firstRig?.id ?? '');
-  };
+    return THUMBNAIL_HIERARCHY_DATA.map(region => {
+      const regionMatches = region.name.toLowerCase().includes(q);
+      const sites = region.sites.map(site => {
+        const siteMatches = site.name.toLowerCase().includes(q);
+        const rigs = site.rigs.filter(rig => rig.name.toLowerCase().includes(q) || siteMatches || regionMatches);
+        
+        if (rigs.length > 0 || siteMatches || regionMatches) {
+          return { ...site, rigs };
+        }
+        return null;
+      }).filter(Boolean) as SiteNode[];
 
-  const handleSiteHover = (siteId: string) => {
-    const nextSite = currentRegion?.sites.find((site) => site.id === siteId);
-    setSelectedSiteId(siteId);
-    setSelectedRigId(nextSite?.rigs[0]?.id ?? '');
-  };
+      if (sites.length > 0 || regionMatches) {
+        return { ...region, sites };
+      }
+      return null;
+    }).filter(Boolean) as RegionNode[];
+  }, [searchQuery]);
+
+  const flatMatchedRigs = useMemo(() => {
+    return filteredTree.flatMap(r => 
+      r.sites.flatMap(s => 
+        s.rigs.map(rig => ({ rig, siteId: s.id, regionId: r.id }))
+      )
+    );
+  }, [filteredTree]);
+
+  // When search query changes, auto-focus the first rig
+  useEffect(() => {
+    if (isHierarchyOpen && searchQuery) {
+      if (flatMatchedRigs.length > 0) {
+        // If current focused is still in list, keep it. Else select first.
+        if (!focusedRigId || !flatMatchedRigs.find(item => item.rig.id === focusedRigId)) {
+          setFocusedRigId(flatMatchedRigs[0].rig.id);
+        }
+      } else {
+        setFocusedRigId(null);
+      }
+    }
+  }, [searchQuery, isHierarchyOpen]);
+
+  // When focusedRigId changes, auto-update selected Region and Site so the third column shows it
+  useEffect(() => {
+    if (isHierarchyOpen && focusedRigId) {
+      const match = flatMatchedRigs.find(item => item.rig.id === focusedRigId);
+      if (match) {
+        setSelectedRegionId(match.regionId);
+        setSelectedSiteId(match.siteId);
+      }
+    }
+  }, [focusedRigId, isHierarchyOpen, flatMatchedRigs]);
 
   const handleRigSelect = (rigId: string) => {
     setSelectedRigId(rigId);
     setIsHierarchyOpen(false);
   };
+
+  const handleRegionHover = (regionId: string) => {
+    const nextRegion = filteredTree.find((region) => region.id === regionId);
+    const firstSite = nextRegion?.sites[0];
+    const firstRig = firstSite?.rigs[0];
+
+    setSelectedRegionId(regionId);
+    setSelectedSiteId(firstSite?.id ?? '');
+    setFocusedRigId(firstRig?.id ?? null);
+  };
+
+  const handleSiteHover = (siteId: string) => {
+    const currentRegion = filteredTree.find((region) => region.id === selectedRegionId);
+    const nextSite = currentRegion?.sites.find((site) => site.id === siteId);
+    
+    setSelectedSiteId(siteId);
+    setFocusedRigId(nextSite?.rigs[0]?.id ?? null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isHierarchyOpen) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (flatMatchedRigs.length > 0) {
+        const idx = flatMatchedRigs.findIndex(item => item.rig.id === focusedRigId);
+        const nextIdx = (idx + 1) % flatMatchedRigs.length;
+        setFocusedRigId(flatMatchedRigs[nextIdx].rig.id);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (flatMatchedRigs.length > 0) {
+        const idx = flatMatchedRigs.findIndex(item => item.rig.id === focusedRigId);
+        const prevIdx = (idx - 1 + flatMatchedRigs.length) % flatMatchedRigs.length;
+        setFocusedRigId(flatMatchedRigs[prevIdx].rig.id);
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (flatMatchedRigs.length === 1) {
+        handleRigSelect(flatMatchedRigs[0].rig.id);
+      } else if (focusedRigId) {
+        handleRigSelect(focusedRigId);
+      }
+    }
+  };
+
+  const highlightMatch = (text: string) => {
+    if (!searchQuery) return text;
+    const index = text.toLowerCase().indexOf(searchQuery.toLowerCase());
+    if (index === -1) return text;
+    return (
+      <>
+        {text.substring(0, index)}
+        <span style={{ color: 'var(--primary-1)', fontWeight: 600 }}>{text.substring(index, index + searchQuery.length)}</span>
+        {text.substring(index + searchQuery.length)}
+      </>
+    );
+  };
+
+  const currentRigName = THUMBNAIL_HIERARCHY_DATA.flatMap(r => r.sites).flatMap(s => s.rigs).find(r => r.id === selectedRigId)?.name;
+
+  const currentRegion = filteredTree.find((region) => region.id === selectedRegionId);
+  const currentSite = currentRegion?.sites.find((site) => site.id === selectedSiteId);
 
   return (
     <section className="thumbnail-section" aria-label="Camera thumbnails">
@@ -221,10 +343,21 @@ function CameraThumbnailBar({ onChipClick }: CameraThumbnailBarProps) {
                 aria-label="Select rig hierarchy"
                 aria-haspopup="true"
                 aria-expanded={isHierarchyOpen}
-                onClick={() => setIsHierarchyOpen((previous) => !previous)}
+                onClick={() => {
+                  setIsHierarchyOpen(prev => !prev);
+                  if (!isHierarchyOpen) {
+                    setSearchQuery('');
+                  }
+                }}
               >
-                <span>{currentRig?.name ?? 'Select rig'}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', flexShrink: 0 }}>
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentRigName ?? 'Select rig'}</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
@@ -233,57 +366,94 @@ function CameraThumbnailBar({ onChipClick }: CameraThumbnailBarProps) {
           </Tooltip>
 
           {isHierarchyOpen && (
-            <div className="hierarchy-dropdown__menu">
-              <div className="hierarchy-dropdown__column">
-                {THUMBNAIL_HIERARCHY_DATA.map((region) => (
-                  <button
-                    key={region.id}
-                    type="button"
-                    className={`hierarchy-dropdown__item ${selectedRegionId === region.id ? 'hierarchy-dropdown__item--selected' : ''}`}
-                    onMouseEnter={() => handleRegionHover(region.id)}
-                  >
-                    <span>{region.name}</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                ))}
+            <div className="hierarchy-dropdown__menu" style={{ flexDirection: 'column', padding: 0, zIndex: 1000 }}>
+              <div style={{ position: 'relative', borderBottom: '1px solid var(--surface-4)', backgroundColor: 'var(--surface-2)', padding: '12px' }}>
+                <span style={{ position: 'absolute', left: '24px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', display: 'flex' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px' }}>
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                </span>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search rigs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  style={{
+                    width: '100%',
+                    height: '34px',
+                    padding: '0 16px 0 36px',
+                    backgroundColor: 'var(--surface-3)',
+                    border: '1px solid var(--surface-4)',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'var(--text-1)',
+                    fontSize: 'var(--font-size-sm)',
+                    outline: 'none',
+                  }}
+                />
               </div>
 
-              <div className="hierarchy-dropdown__column">
-                {(currentRegion?.sites ?? []).length > 0 ? (
-                  currentRegion?.sites.map((site) => (
-                    <button
-                      key={site.id}
-                      type="button"
-                      className={`hierarchy-dropdown__item ${selectedSiteId === site.id ? 'hierarchy-dropdown__item--selected' : ''}`}
-                      onMouseEnter={() => handleSiteHover(site.id)}
-                    >
-                      <span>{site.name}</span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </button>
-                  ))
+              <div style={{ display: 'flex', flexDirection: 'row' }}>
+                {filteredTree.length === 0 ? (
+                  <div className="hierarchy-dropdown__empty" style={{ width: '100%', padding: '24px' }}>No rigs found</div>
                 ) : (
-                  <div className="hierarchy-dropdown__empty">No sites</div>
-                )}
-              </div>
+                  <>
+                    <div className="hierarchy-dropdown__column">
+                      {filteredTree.map((region) => (
+                        <button
+                          key={region.id}
+                          type="button"
+                          className={`hierarchy-dropdown__item ${selectedRegionId === region.id ? 'hierarchy-dropdown__item--selected' : ''}`}
+                          onMouseEnter={() => handleRegionHover(region.id)}
+                        >
+                          <span>{highlightMatch(region.name)}</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
 
-              <div className="hierarchy-dropdown__column">
-                {(currentSite?.rigs ?? []).length > 0 ? (
-                  currentSite?.rigs.map((rig) => (
-                    <button
-                      key={rig.id}
-                      type="button"
-                      className={`hierarchy-dropdown__item ${selectedRigId === rig.id ? 'hierarchy-dropdown__item--selected' : ''}`}
-                      onClick={() => handleRigSelect(rig.id)}
-                    >
-                      <span>{rig.name}</span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="hierarchy-dropdown__empty">No rigs</div>
+                    <div className="hierarchy-dropdown__column">
+                      {(currentRegion?.sites ?? []).length > 0 ? (
+                        currentRegion?.sites.map((site) => (
+                          <button
+                            key={site.id}
+                            type="button"
+                            className={`hierarchy-dropdown__item ${selectedSiteId === site.id ? 'hierarchy-dropdown__item--selected' : ''}`}
+                            onMouseEnter={() => handleSiteHover(site.id)}
+                          >
+                            <span>{highlightMatch(site.name)}</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="hierarchy-dropdown__empty">No sites</div>
+                      )}
+                    </div>
+
+                    <div className="hierarchy-dropdown__column">
+                      {(currentSite?.rigs ?? []).length > 0 ? (
+                        currentSite?.rigs.map((rig) => (
+                          <button
+                            key={rig.id}
+                            type="button"
+                            className={`hierarchy-dropdown__item ${rig.id === focusedRigId ? 'hierarchy-dropdown__item--selected' : ''}`}
+                            onMouseEnter={() => setFocusedRigId(rig.id)}
+                            onClick={() => handleRigSelect(rig.id)}
+                          >
+                            <span>{highlightMatch(rig.name)}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="hierarchy-dropdown__empty">No rigs</div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
